@@ -41,6 +41,20 @@ jobs:
           echo "List dist output:";
           Get-ChildItem -Recurse dist | Select-Object FullName,Length | Format-Table -AutoSize
 
+      - name: Install Inno Setup
+        run: choco install innosetup -y
+
+      - name: Build Inno Setup installer
+        working-directory: electron
+        run: |
+          $ver = (Get-Content package.json | ConvertFrom-Json).version
+          "Building Inno Setup installer for version $ver" | Write-Host
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
+          if (Test-Path installer-output\MergePDFSetup.exe) {
+            Rename-Item installer-output\MergePDFSetup.exe "MergePDFSetup-$ver.exe"
+          }
+          Get-ChildItem installer-output | Format-Table -AutoSize
+
       - name: Upload dist folder
         if: success()
         uses: actions/upload-artifact@v4
@@ -56,5 +70,6 @@ jobs:
             electron/dist/*.exe
             electron/dist/*.msi
             electron/dist/win-unpacked/**
+            electron/installer-output/*.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

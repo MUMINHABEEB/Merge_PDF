@@ -1,6 +1,6 @@
 {
   "name": "merge-pdf-app",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Desktop PDF merge tool",
   "main": "main.js",
   "author": "",
