@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Merge PDF</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>Merge PDF</h1>
+    <div class="actions">
+      <button id="addFilesBtn">Add PDFs</button>
+      <button id="mergeBtn" disabled>Merge</button>
+      <input id="search" type="text" placeholder="Filter files..." />
+    </div>
+  </header>
+
+  <main>
+    <div id="dropZone" class="drop-zone">
+      <p>Drag & drop PDF files here or click "Add PDFs"</p>
+    </div>
+    <ul id="fileList" class="file-list"></ul>
+  </main>
+
+  <template id="file-item-template">
+    <li class="file-item" draggable="true">
+      <div class="thumb">PDF</div>
+      <div class="meta">
+        <div class="name"></div>
+        <div class="size"></div>
+      </div>
+      <div class="controls">
+        <button class="up" title="Move up">▲</button>
+        <button class="down" title="Move down">▼</button>
+        <button class="remove" title="Remove">✕</button>
+      </div>
+    </li>
+  </template>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
