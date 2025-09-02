@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    permissions:
+      contents: write
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       ELECTRON_BUILDER_SKIP_TPL_COPY: 'true'
@@ -55,6 +57,21 @@ jobs:
           }
           Get-ChildItem installer-output | Format-Table -AutoSize
 
+      - name: Prepare additional archives
+        working-directory: electron
+        run: |
+          $ver = (Get-Content package.json | ConvertFrom-Json).version
+          if (Test-Path dist/win-unpacked) {
+            Compress-Archive -Path dist/win-unpacked/* -DestinationPath dist/win-unpacked-$ver.zip
+          }
+          if (Get-ChildItem dist -Filter *.exe) {
+            $exe = Get-ChildItem dist -Filter *.exe | Select -First 1
+            if ($exe -and -not ($exe.Name -like "*Setup*")) {
+              Rename-Item $exe.FullName ("MergePDF-$ver-NSIS.exe")
+            }
+          }
+          Get-ChildItem dist | Format-Table -AutoSize
+
       - name: Upload dist folder
         if: success()
         uses: actions/upload-artifact@v4
@@ -71,5 +88,6 @@ jobs:
             electron/dist/*.msi
             electron/dist/win-unpacked/**
             electron/installer-output/*.exe
+            electron/dist/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
