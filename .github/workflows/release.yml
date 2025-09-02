@@ -4,37 +4,57 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      ELECTRON_BUILDER_SKIP_TPL_COPY: 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Show repository tree (debug)
+        run: |
+          echo "Root contents:"; Get-ChildItem -Force
+          echo "Electron dir:"; Get-ChildItem -Force electron
+        shell: pwsh
+
       - name: Use Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install deps
+          cache: 'npm'
+          cache-dependency-path: electron/package-lock.json
+
+      - name: Install dependencies
+        working-directory: electron
+        run: npm ci --no-audit --no-fund
+
+      - name: Build (electron-builder)
+        working-directory: electron
         run: |
-          cd electron
-          npm ci
-      - name: Build
-        run: |
-          cd electron
-          setx CSC_IDENTITY_AUTO_DISCOVERY false
-          npm run dist
-      - name: Upload Artifacts
+          echo "Starting build";
+          npx electron-builder --config.packageJson=package.json
+          echo "List dist output:";
+          Get-ChildItem -Recurse dist | Select-Object FullName,Length | Format-Table -AutoSize
+
+      - name: Upload dist folder
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: dist
           path: electron/dist/**
+
       - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: |
             electron/dist/*.exe
             electron/dist/*.msi
-            electron/dist/installer-output/*.exe
+            electron/dist/win-unpacked/**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
